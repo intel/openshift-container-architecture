@@ -4,7 +4,7 @@
 *Please, refer to Reference Architecture document for actual instructions*
 
 ### Clone the repository
-``git clone https://github.com/intel/openshift-container-architecture.git```
+```git clone https://github.com/intel/openshift-container-architecture.git```
 
 #### Optional: if switch provisioning is planned, submodule has to be initiated
 
