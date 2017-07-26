@@ -1,0 +1,3 @@
+[submodule "src/cnos-configuration/ansible-cnos"]
+	path = src/cnos-configuration/ansible-cnos
+	url = https://github.com/lenovo/ansible-cnos.git

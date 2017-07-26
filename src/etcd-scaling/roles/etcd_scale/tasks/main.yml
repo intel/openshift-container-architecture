@@ -1,0 +1,56 @@
+# Copyright (c) 2017 Intel Corporation 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+- name: debug
+  debug:
+    msg: "ETCD is containerized"
+  when: etcd_is_containerized | bool
+
+- name: debug
+  debug: 
+    msg: "ETCD is NOT containerized"
+  when: not etcd_is_containerized | bool 
+
+- name: Add etcd hosts to cluster
+  command: >
+     etcdctl -C https://{{ etcd_ca_host }}:2379
+     --ca-file=/etc/etcd/ca.crt --cert-file=/etc/etcd/peer.crt
+     --key-file=/etc/etcd/peer.key member add {{ etcd_hostname }} https://{{ etcd_ip }}:2380
+  delegate_to: "{{ etcd_ca_host }}"
+  register: scale_initial_cluster
+
+- name: Add firewall rule for port 2379
+  lineinfile:
+    path: /etc/sysconfig/iptables
+    line: "-A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m tcp --dport 2379 -j ACCEPT"
+    insertbefore: 'COMMIT'    
+
+- name: Add firewall rule for port 2380
+  lineinfile:
+    path: /etc/sysconfig/iptables
+    line: "-A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m tcp --dport 2380 -j ACCEPT"
+    insertbefore: 'COMMIT'
+
+- name: Restart firewall
+  service:
+    name: iptables
+    state: restarted
+
+- include: container.yml
+  when: etcd_is_containerized | bool
+
+- include: rpm.yml
+  when: not etcd_is_containerized | bool
+
+- pause:
+    seconds: 5

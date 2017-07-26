@@ -1,0 +1,11 @@
+---
+etcd_is_containerized: "{{ containerized }}"
+etcd_hostname: "{{ openshift_hostname }}"
+etcd_ip: "{{ openshift_ip }}"
+etcd_cert_subdir: "etcd-{{ openshift_hostname }}"
+etcd_cert_prefix:
+etcd_cert_config_dir: /etc/etcd
+etcd_peer_url_scheme: https
+etcd_url_scheme: https
+etcd_ca_host: "{{ groups.etcd.0 }}"
+jin_initial_cluster: "{{ scale_initial_cluster.stdout_lines[3] }}"

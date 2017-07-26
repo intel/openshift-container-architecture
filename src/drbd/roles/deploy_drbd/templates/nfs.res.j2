@@ -1,0 +1,15 @@
+resource nfs {
+protocol C;
+on {{ primary_hostname }} {
+                device /dev/drbd0;
+                disk /dev/mapper/{{ vg_name }}-drbd_registry;
+                address {{ primary_private_address }}:7788;
+                meta-disk internal;
+        }
+on {{ secondary_hostname }}  {
+                device /dev/drbd0;
+                disk /dev/mapper/{{ vg_name }}-drbd_registry;
+                address {{ secondary_private_address }}:7788;
+                meta-disk internal;
+        }
+}

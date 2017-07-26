@@ -1,0 +1,26 @@
+- name: Install etcd
+  action: "{{ ansible_pkg_mgr }} name=etcd state=present"
+  when: not etcd_is_containerized | bool
+
+- name: Validate permissions on the config dir
+  file:
+    path: "{{ etcd_conf_dir }}"
+    state: directory
+    owner: "{{ 'etcd' if not etcd_is_containerized | bool else omit }}"
+    group: "{{ 'etcd' if not etcd_is_containerized | bool else omit }}"
+    mode: 0700
+
+- include: certificates.yml
+
+- name: Create etcd config file for new instancie
+  template:
+    src: etcd.conf.j2
+    dest: /etc/etcd/etcd.conf
+    backup: true
+
+- name: Restart and enable etcd
+  service:
+    name: etcd
+    state: restarted
+    enabled: yes
+  register: start_result

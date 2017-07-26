@@ -1,0 +1,93 @@
+# Copyright (c) 2017 Intel Corporation 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: add EPEL repository
+  command: rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+  ignore_errors: True
+
+- rpm_key:
+    state: present
+    key: https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+
+- name: Install DRBD utils
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - drbd84-utils
+    - kmod-drbd84
+
+- name: Create drbd config file
+  template:
+    src: nfs.res.j2
+    dest: /etc/drbd.d/nfs.res
+
+- name: Create drbd device on both nodes
+  shell: yes yes | drbdadm create-md nfs
+
+- name: Turn up the drbd device
+  shell: yes yes | drbdadm up nfs
+
+- name: Set a primary drbd device
+  command: drbdadm primary nfs --force
+  when: ansible_host == "{{ drbd_primary_host }}"
+
+- name: Set a secondary drbd device
+  command: drbdadm secondary nfs
+  when: ansible_host == "{{ drbd_secondary_host }}"
+
+- name: Start and enable drbd service
+  service:
+    name: drbd
+    state: started
+    enabled: yes
+
+- name: Format drbd device
+  filesystem:
+    fstype: xfs
+    dev: /dev/drbd0
+  when: ansible_host == "{{ drbd_primary_host }}"
+
+- name: Create exports directory
+  file: path=/exports state=directory
+
+- name: Mount drbd device on primary node
+  command: mount /dev/drbd0 /exports
+  when: ansible_host == "{{ drbd_primary_host }}"
+
+- name: Add rc.local drbd mount on primary node
+  lineinfile:
+    dest: /etc/rc.local
+    line: "sleep 10s; drbdadm primary nfs --force; mount /dev/drbd0 /exports"
+  when: ansible_host == "{{ drbd_primary_host }}" 
+
+- name: Make rc.local file executable
+  file:
+    path: /etc/rc.d/rc.local
+    mode: "u+x"
+  when: ansible_host == "{{ drbd_primary_host }}"
+
+- name: Add iptables rule for drbd connections on primary node
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    source: "{{ secondary_private_address }}"
+  when: ansible_host == "{{ drbd_primary_host }}"
+
+- name: Add iptables rule for drbd connections on secondary node
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    source: "{{ primary_private_address }}"
+  when: ansible_host == "{{ drbd_secondary_host }}" 
