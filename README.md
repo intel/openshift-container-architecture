@@ -20,7 +20,6 @@ Refer to *hosts.example* for possible variables.
 
 ```vim /etc/ansible/hosts```
 
-
 ### Preparing the nodes for OpenShift Container Platform
 
 ```ansible-playbook src/prerequisites/nodes_setup.yaml -k```
