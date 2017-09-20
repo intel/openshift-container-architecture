@@ -20,6 +20,12 @@
     - openshift_remote_access_master
     - openshift_dns
     - known_hosts
+  post_tasks:
+    - name: Install openshift-ansible
+      yum: name={{ item }} state=latest
+      with_items:
+        - openshift-ansible
+        - atomic-openshift-utils
 
 - hosts: nodes
   vars:
