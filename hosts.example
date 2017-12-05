@@ -1,72 +1,91 @@
 [OSEv3:children]
 masters
 nodes
-nfs
 etcd
 lb
 local
+glusterfs
+glusterfs_registry
 
 [OSEv3:vars]
 ansible_ssh_user=openshift
 ansible_become=true
-openshift_use_dnsmasq=false
 openshift_master_cluster_method=native
 openshift_master_cluster_hostname=ocp.example.local
 openshift_master_cluster_public_hostname=ocp.example.com
 openshift_master_default_subdomain=apps.ocp.example.com
+openshift_master_cluster_ip=172.30.4.30
+openshift_master_cluster_public_ip=100.65.0.30
+openshift_master_portal_net=10.0.0.0/16
 deployment_type=openshift-enterprise
+openshift_release=v3.6
 os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/users.htpasswd'}]
-openshift_hosted_registry_storage_kind=nfs
-openshift_hosted_registry_storage_volume_size=300Gi
-local_dns=172.30.4.12
-external_interface=eno1
-external_vlan=546
-external_gateway=10.240.36.1
+openshift_master_htpasswd_users={'admin': '$apr1$vC6GcVUP$AHZDU5BAFF6dDMfk.IFzG1'}
+rhel_subscription_user=user@example.com
+rhel_subscription_pass=portal_password
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_storage_volume_size=200Gi
+openshift_storage_glusterfs_registry_storageclass=True
+local_dns=172.30.4.10
+external_interface=bond0
+external_vlan= 2017
+external_netmask=255.255.250.0
+external_gateway=100.65.0.1
 internal_interface=bond0
-openshift_master_cluster_ip=172.30.4.132
-openshift_master_cluster_public_ip=10.240.37.132
-openshift_master_portal_net=10.0.0.0/16
-openshift_release=v3.5
-rhel_subscription_user=RED_HAT_PORTAL_LOGIN
-rhel_subscription_pass=RED_HAT_PORTAL_PASSWORD
+internal_netmask=255.255.255.0
+bastion_ip=172.30.4.10
+internal_gateway={{ bastion_ip }}
+dhcp_first_ip=172.30.4.100
+dhcp_last_ip=172.30.4.150
+root_password=NODE_ROOT_PASSWORD
 
 [local]
 127.0.0.1
 
 [masters]
-master1.ocp.example.local containerized=True openshift_ip=172.30.4.9 openshift_hostname=master1.ocp.example.local
-master2.ocp.example.local containerized=True openshift_ip=172.30.4.10 openshift_hostname=master2.ocp.example.local
-master3.ocp.example.local containerized=True openshift_ip=172.30.4.11 openshift_hostname=master3.ocp.example.local
+master1.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.11 openshift_hostname=master1.ocp.example.local
+master2.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.12 openshift_hostname=master2.ocp.example.local
+master3.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.13 openshift_hostname=master3.ocp.example.local
 
 [nodes]
-master1.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.9 openshift_hostname=master1.ocp.example.local
-master2.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.10 openshift_hostname=master2.ocp.example.local
-master3.ocp.example.local containerized=True openshift_schedulable=False openshift_ip=172.30.4.11 openshift_hostname=master3.ocp.example.local
-
-infra1.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.7 openshift_hostname=infra1.ocp.example.local openshift_node_labels="{'region': 'infra'}"
-infra2.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.8 openshift_hostname=infra2.ocp.example.local openshift_node_labels="{'region': 'infra'}"
-
-app1.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.1 openshift_hostname=app1.ocp.example.local
-app2.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.2 openshift_hostname=app2.ocp.example.local
-app3.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.3 openshift_hostname=app3.ocp.example.local
-app4.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.4 openshift_hostname=app4.ocp.example.local
-app5.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.5 openshift_hostname=app5.ocp.example.local
-app6.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.6 openshift_hostname=app6.ocp.example.local
-
-[nfs]
-nfs1.ocp.example.local openshift_hostname=nfs1.ocp.example.local openshift_ip=172.30.4.7
-nfs2.ocp.example.local openshift_hostname=nfs2.ocp.example.local openshift_ip=172.30.4.8
+master1.ocp.example.local openshift_schedulable=False openshift_ip=172.30.4.11 openshift_hostname=master1.ocp.example.local ipmi=192.168.25.12 serial=BQF973900001
+master2.ocp.example.local openshift_schedulable=False openshift_ip=172.30.4.12 openshift_hostname=master2.ocp.example.local ipmi=192.168.25.13 serial=BQF973900002
+master3.ocp.example.local openshift_schedulable=False openshift_ip=172.30.4.13 openshift_hostname=master3.ocp.example.local ipmi=192.168.25.14 serial=BQF973900003
+infra1.ocp.example.local openshift_node_labels="{'region': 'infra'}" openshift_schedulable=True containerized=True openshift_public_ip=100.65.0.14 openshift_ip=172.30.4.14 openshift_hostname=infra1.ocp.example.local  ipmi=192.168.25.15 serial=BQF973900006
+infra2.ocp.example.local openshift_node_labels="{'region': 'infra'}" openshift_schedulable=True containerized=True openshift_public_ip=100.65.0.15 openshift_ip=172.30.4.15 openshift_hostname=infra2.ocp.example.local  ipmi=192.168.25.16 serial=BQF973900004
+app1.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.16 openshift_hostname=app1.ocp.example.local  ipmi=192.168.25.17 serial=BQF973900007
+app2.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.17 openshift_hostname=app2.ocp.example.local  ipmi=192.168.25.18 serial=BQF973900009
+app3.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.18 openshift_hostname=app3.ocp.example.local  ipmi=192.168.25.19 serial=BQF973900008
+app4.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.19 openshift_hostname=app4.ocp.example.local  ipmi=192.168.25.20 serial=BQF973900011
+app5.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.20 openshift_hostname=app5.ocp.example.local  ipmi=192.168.25.21 serial=BQF973900010
+app6.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.21 openshift_hostname=app6.ocp.example.local  ipmi=192.168.25.22 serial=BQF973900012
+gluster1.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.22 openshift_hostname=gluster1.ocp.example.local  ipmi=192.168.25.23 serial=BQF974100202
+gluster2.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.23 openshift_hostname=gluster2.ocp.example.local  ipmi=192.168.25.24 serial=BQF974100201
+gluster3.ocp.example.local containerized=True openshift_schedulable=True openshift_ip=172.30.4.24 openshift_hostname=gluster3.ocp.example.local  ipmi=192.168.25.25 serial=BQF974100203
 
 [etcd]
-etcd1.ocp.example.local containerized=True openshift_ip=172.30.4.9 openshift_hostname=etcd1.ocp.example.local
-etcd2.ocp.example.local containerized=True openshift_ip=172.30.4.10 openshift_hostname=etcd2.ocp.example.local
-etcd3.ocp.example.local containerized=True openshift_ip=172.30.4.11 openshift_hostname=etcd3.ocp.example.local
+etcd1.ocp.example.local containerized=True openshift_ip=172.30.4.11 openshift_hostname=etcd1.ocp.example.local
+etcd2.ocp.example.local containerized=True openshift_ip=172.30.4.12 openshift_hostname=etcd2.ocp.example.local
+etcd3.ocp.example.local containerized=True openshift_ip=172.30.4.13 openshift_hostname=etcd3.ocp.example.local
 
 [lb]
-lb1.ocp.example.local openshift_hostname=lb1.ocp.example.local openshift_ip=172.30.4.7
-lb2.ocp.example.local openshift_hostname=lb2.ocp.example.local openshift_ip=172.30.4.8
+lb1.ocp.example.local openshift_hostname=lb1.ocp.example.local openshift_ip=172.30.4.14 openshift_public_ip=100.65.0.14
+lb2.ocp.example.local openshift_hostname=lb2.ocp.example.local openshift_ip=172.30.4.15 openshift_public_ip=100.65.0.15
 
-[switches]
-gswitch3 username=admin password=SWITCH_ADMIN_PASSWORD
-gswitch4 username=admin password=SWITCH_ADMIN_PASSWORD
+[glusterfs]
+app1.ocp.example.local glusterfs_ip=172.30.4.16 glusterfs_devices="[ '/dev/nvme0n1' ]"
+app2.ocp.example.local glusterfs_ip=172.30.4.17 glusterfs_devices="[ '/dev/nvme0n1' ]"
+app3.ocp.example.local glusterfs_ip=172.30.4.18 glusterfs_devices="[ '/dev/nvme0n1' ]"
+app4.ocp.example.local glusterfs_ip=172.30.4.19 glusterfs_devices="[ '/dev/nvme0n1' ]"
+app5.ocp.example.local glusterfs_ip=172.30.4.20 glusterfs_devices="[ '/dev/nvme0n1' ]"
+app6.ocp.example.local glusterfs_ip=172.30.4.21 glusterfs_devices="[ '/dev/nvme0n1' ]"
+
+[glusterfs_registry]
+gluster1.ocp.example.local glusterfs_ip=172.30.4.22 glusterfs_devices="[ '/dev/sdb', '/dev/sdc', '/dev/sdd', '/dev/sde', '/dev/sdf', '/dev/sdg', '/dev/sdh', '/dev/sdi', '/dev/sdj', '/dev/sdk', '/dev/sdl', '/dev/sdm', '/dev/sdn', '/dev/sdo', '/dev/sdp', '/dev/sdq', '/dev/sdr', '/dev/sds', '/dev/sdt', '/dev/sdu' ]"
+gluster2.ocp.example.local glusterfs_ip=172.30.4.23 glusterfs_devices="[ '/dev/sdb', '/dev/sdc', '/dev/sdd', '/dev/sde', '/dev/sdf', '/dev/sdg', '/dev/sdh', '/dev/sdi', '/dev/sdj', '/dev/sdk', '/dev/sdl', '/dev/sdm', '/dev/sdn', '/dev/sdo', '/dev/sdp', '/dev/sdq', '/dev/sdr', '/dev/sds', '/dev/sdt', '/dev/sdu' ]"
+gluster3.ocp.example.local glusterfs_ip=172.30.4.24 glusterfs_devices="[ '/dev/sdb', '/dev/sdc', '/dev/sdd', '/dev/sde', '/dev/sdf', '/dev/sdg', '/dev/sdh', '/dev/sdi', '/dev/sdj', '/dev/sdk', '/dev/sdl', '/dev/sdm', '/dev/sdn', '/dev/sdo', '/dev/sdp', '/dev/sdq', '/dev/sdr', '/dev/sds', '/dev/sdt', '/dev/sdu' ]"
+
+[arista]
+arista-1 ansible_host=192.168.25.2 ansible_user=admin ansible_password=SWITCH_ADMIN_PASSWORD
+arista-2 ansible_host=192.168.25.3 ansible_user=admin  ansible_password=SWITCH_ADMIN_PASSWORD

@@ -5,9 +5,6 @@ address=/{{hostvars[host]['openshift_hostname']}}/{{hostvars[host]['inventory_ho
 {% for host  in groups['nodes'] %}
 address=/{{hostvars[host]['openshift_hostname']}}/{{hostvars[host]['inventory_hostname']}}/{{ hostvars[host]['openshift_ip'] }}
 {% endfor %}
-{% for host  in groups['nfs'] %}
-address=/{{hostvars[host]['openshift_hostname']}}/{{hostvars[host]['inventory_hostname']}}/{{ hostvars[host]['openshift_ip'] }}
-{% endfor %}
 {% for host  in groups['etcd'] %}
 address=/{{hostvars[host]['openshift_hostname']}}/{{hostvars[host]['inventory_hostname']}}/{{ hostvars[host]['openshift_ip'] }}
 {% endfor %}

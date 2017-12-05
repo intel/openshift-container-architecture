@@ -12,6 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: Remove RedHat subscriptions
-  redhat_subscription:
-    state: absent
+- name: Configuring top level settings
+  eos_config:
+    lines:
+      - hostname {{ inventory_hostname }}
+    provider: "{{ eos_connection }}"
+
+- name: Applying vlans configuration
+  eos_config:
+    src: templates/eos_vlan.cfg.j2
+    provider: "{{ eos_connection }}"
+
+- name: Applying interfaces configuration
+  eos_config:
+    src: templates/eos_intf.cfg.j2
+    provider: "{{ eos_connection }}"
+
+- name: Saving the configuration
+  eos_command:
+    commands:
+      - write
+    provider: "{{ eos_connection }}"

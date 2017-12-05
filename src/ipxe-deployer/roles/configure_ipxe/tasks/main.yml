@@ -12,6 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: Remove RedHat subscriptions
-  redhat_subscription:
-    state: absent
+- name: Create ipmi.list.txt
+  template:
+    src: ipmi.list.txt.j2
+    dest: /tftp/ipmi.list.txt
+
+- name: Create Atomic kickstarts
+  template:
+    src: atomic.ks.j2
+    dest: /tftp/atomic/media/atomic-{{ item }}.ks
+  with_items: "{{ groups.nodes }}"
+
+- name: Create iPXE configs
+  template:
+    src: serial.ipxe.j2
+    dest: /tftp/ipxe/serial/{{ hostvars[item]['serial'] }}.ipxe
+  with_items: "{{ groups.nodes }}"

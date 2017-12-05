@@ -1,6 +1,0 @@
-#!/bin/bash
-{% for host in groups['lb'] %}
-iptables -A INPUT -s {{ hostvars[host].openshift_ip }} -j ACCEPT
-{% endfor %}
-
-iptables-save > /etc/sysconfig/iptables

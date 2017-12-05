@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2017 Intel Corporation 
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: Install packages
-  yum: name={{ item }} state=present
-  with_items:
-  - keepalived
-  - psmisc
+- name: Create a local temp directory for docker build
+  file:
+    path: /tmp/keepalived_build/
+    state: directory
 
-- name: Allow connections between infrastructure nodes
-  template:
-    src: firewall.sh.j2
-    dest: /tmp/firewall.sh
-    mode: "u=rwx,g=,o="
+- name: Copy Dockerfile
+  copy:
+    src: keepalived/Dockerfile
+    dest: /tmp/keepalived_build/Dockerfile
 
-- command: /tmp/firewall.sh
+- name: Build keepalived image
+  docker_image: >
+    name={{ keepalived_image }}
+    tag={{ keepalived_image_tag }}
+    path=/tmp/keepalived_build
+    state=present
 
-- file: 
-    path: /tmp/firewall.sh
-    state: absent 
+- name: Remove build directory
+  file:
+    path: /tmp/keepalived_build
+    state: absent
 
 - name: Generate random internal password
   shell: uuidgen
@@ -40,17 +44,30 @@
   run_once: true
   register: keepalived_external_pass
 
+- name: Creates directory
+  file:
+    path: /etc/keepalived
+    state: directory
+
 - name: Configure keepalived
   template:
-    src: keepalived.conf.j2
-    dest: /etc/keepalived/keepalived.conf
+    src: keepalived.cfg.j2
+    dest: /etc/keepalived/keepalived.cfg
+
+- name: Generate systemd keepalived file
+  template:
+    src: keepalived.service.j2
+    dest: /etc/systemd/system/keepalived.service
+
+- name: Generate healthcheck script
+  template:
+    src: healthcheck-keepalived.sh.j2
+    dest: /etc/keepalived/healthcheck-keepalived.sh
+    mode: "o+rx"
 
 - name: Start keepalived
-  service: 
-    name: keepalived
-    state: started
-    enabled: yes
-
-- service:
+  systemd:
     name: keepalived
     state: restarted
+    enabled: yes
+    daemon_reload: yes

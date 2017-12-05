@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2017 Intel Corporation 
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # limitations under the License.
 - hosts: local
   connection: local
-  roles: 
+  roles:
     - rhel_unsubscribe
     - rhel_subscribe
     - openshift_remote_access_master
@@ -25,7 +25,7 @@
       yum: name={{ item }} state=latest
       with_items:
         - openshift-ansible
-        - atomic-openshift-utils
+        - atomic-openshift-utils      
 
 - hosts: nodes
   vars:
@@ -34,4 +34,10 @@
     - openshift_remote_access_slaves
     - rhel_unsubscribe
     - rhel_subscribe
-    - openshift_node_preparation 
+    - openshift_node_preparation
+
+- hosts: glusterfs, glusterfs_registry
+  vars:
+    ansible_ssh_user: root
+  roles:
+    - gluster_subscribe

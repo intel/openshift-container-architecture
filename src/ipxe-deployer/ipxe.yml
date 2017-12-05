@@ -12,6 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: Remove RedHat subscriptions
-  redhat_subscription:
-    state: absent
+- hosts: local
+  connection: local
+  roles:
+    - {role: deploy_ipxe, tags: ['run']}
+    - {role: configure_ipxe, tags: ['config']}
+    - {role: firewall, tags: ['firewall']}

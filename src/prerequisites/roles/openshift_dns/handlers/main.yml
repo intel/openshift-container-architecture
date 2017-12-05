@@ -2,5 +2,5 @@
 ---
 - name: restart dnsmasq
   systemd:
-    name: dnsmasq
+    name: dnsmasq_container
     state: restarted

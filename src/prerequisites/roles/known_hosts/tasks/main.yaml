@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2017 Intel Corporation 
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 - name: Make sure the known_hosts file and path exist
-  file: 
+  file:
     path: "{{ ansible_env.HOME }}/.ssh"
     state: directory
     mode: 0700
@@ -23,11 +23,10 @@
   with_items:
   - "{{ groups['masters'] }}"
   - "{{ groups['nodes'] }}"
-  - "{{ groups['nfs'] }}"
   - "{{ groups['etcd'] }}"
   - "{{ groups['lb'] }}"
-
-
+  - "{{ groups['glusterfs'] }}"
+  - "{{ groups['glusterfs_registry'] }}"
 
 - name: Create {{ ansible_ssh_user }} SSH dir
   file:
@@ -36,11 +35,9 @@
     mode: 0700
     owner: "{{ ansible_ssh_user }}"
 
-
 - name: Copy known_hosts file to openshift's home directory
   copy:
     dest: "/home/{{ ansible_ssh_user }}/.ssh/"
     owner: "{{ ansible_ssh_user }}"
     mode: 0600
     src: "{{ ansible_env.HOME }}/.ssh/known_hosts"
- 

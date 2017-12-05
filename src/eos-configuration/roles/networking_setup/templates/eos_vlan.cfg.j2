@@ -1,0 +1,9 @@
+{% if external_vlan is defined %}
+vlan {{ external_vlan }}
+  name ocp_public
+{% endif %}
+
+{% if internal_vlan is defined %}
+vlan {{ internal_vlan }}
+  name ocp_internal
+{% endif %}

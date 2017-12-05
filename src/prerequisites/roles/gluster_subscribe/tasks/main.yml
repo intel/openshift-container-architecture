@@ -1,0 +1,43 @@
+---
+# Copyright (c) 2017 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+- name: RedHat subscriptions
+  redhat_subscription:
+    username: "{{ rhel_subscription_user }}"
+    password: "{{ rhel_subscription_pass }}"
+    force_register: no
+
+- name: Retrieve the GlusterFS Pool ID
+  command: subscription-manager list --available --matches="{{ gluster_subscription_pool }}" --pool-only
+  register: glusterfs_pool_id
+  changed_when: False
+
+- name: Determine if GlusterFS Pool Already Attached
+  command: subscription-manager list --consumed --matches="{{ gluster_subscription_pool }}" --pool-only
+  register: glusterfs_pool_attached
+  changed_when: False
+  when: glusterfs_pool_id.stdout == ''
+
+- fail:
+    msg: "Unable to find pool matching {{ gluster_subscription_pool }} in available or consumed pools"
+  when: glusterfs_pool_id.stdout == '' and glusterfs_pool_attached is defined and glusterfs_pool_attached.stdout == ''
+
+- name: Attach to GlusterFS Pool
+  command: subscription-manager subscribe --pool {{ glusterfs_pool_id.stdout_lines[0] }}
+  when: glusterfs_pool_id.stdout != ''
+
+- name: enable the repositories
+  command: subscription-manager repos --enable={{ item }}
+  with_items:
+    - rh-gluster-3-for-rhel-7-server-rpms

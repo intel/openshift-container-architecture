@@ -3,34 +3,41 @@ global_defs {
 }
 
 vrrp_script haproxy_check {
-   script "killall -0 haproxy"
-   interval 2
-   weight 2 
+  script "/etc/keepalived/healthcheck-keepalived.sh"
+  interval 2
 }
 
 vrrp_instance OCP_EXT {
-   interface {{ external_interface }}{% if external_vlan is defined %}.{{ external_vlan }}{% endif %}
+   interface {{ internal_interface }}{% if internal_vlan is defined %}.{{ internal_vlan }}{% endif %}
 
    virtual_router_id 51
 
-   priority {% for lb in play_hosts %}{% if inventory_hostname==lb %}{{ keepalived_priority_start - loop.index * 2 }}{% endif %}{% endfor %}
+   priority 100
 
-
-
-   state {% if groups.lb.index(inventory_hostname) == 0 %} {{ "MASTER" }}{% else %} {{ "BACKUP" }}{% endif %}
+   state BACKUP
 
 
    virtual_ipaddress {
        {{ openshift_master_cluster_public_ip }} dev {{ external_interface }}{% if external_vlan is defined %}.{{ external_vlan }}{% endif %}
 
    }
+
    track_script {
        haproxy_check
    }
+
    authentication {
       auth_type PASS
       auth_pass {{ keepalived_external_pass.stdout }}
    }
+
+   unicast_src_ip {{ openshift_ip }}
+
+   unicast_peer { {% for host in groups['lb'] %}
+                         "{{ hostvars[host].openshift_ip }}"                  
+                 {% endfor %}
+                }
+
 }
 
 vrrp_instance OCP_INT {
@@ -38,23 +45,29 @@ vrrp_instance OCP_INT {
    
    virtual_router_id 91
    
-   priority {% for lb in play_hosts %}{% if inventory_hostname==lb %}{{ keepalived_priority_start - loop.index * 2 }}{% endif %}{% endfor %}
+   priority 100
 
-
-
-   state {% if groups.lb.index(inventory_hostname) == 0 %} {{ "MASTER" }}{% else %} {{ "BACKUP" }}{% endif %}
-
+   state BACKUP
 
    virtual_ipaddress {
        {{ openshift_master_cluster_ip }} dev {{ internal_interface }}{% if internal_vlan is defined %}.{{ internal_vlan }}{% endif %}
    
    }
+
    track_script {
        haproxy_check
    }
+
    authentication {
       auth_type PASS
       auth_pass {{ keepalived_internal_pass.stdout }}
    }
+
+   unicast_src_ip {{ openshift_ip }}
+   
+   unicast_peer { {% for host in groups['lb'] %}
+                         "{{ hostvars[host].openshift_ip }}"
+                  {% endfor %}
+                }
 }
 

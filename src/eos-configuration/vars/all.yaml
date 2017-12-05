@@ -1,0 +1,6 @@
+---
+eos_connection:
+  transport: eapi
+  authorize: yes
+  use_ssl: True
+  validate_certs: False

@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2017 Intel Corporation 
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: install dnsmasq
-  yum:
-    name: dnsmasq
-- name: update configuration file
-  template:
-    src: dnsmasq.conf.j2
-    dest: /etc/dnsmasq.conf
-    owner: root
-    group: root
-    mode: 0644
-  notify: restart dnsmasq
-
 - name: add specific configuration files
   template:
     src: "hosts.j2"
@@ -35,5 +23,15 @@
 
 - name: start and enable service
   systemd:
-    name: dnsmasq
-    state: restarted 
+    name: dnsmasq_container
+    state: restarted
+
+- name: Add local DNS
+  lineinfile:
+    dest: /etc/resolv.conf
+    state: present
+    line: "nameserver 127.0.0.1"
+
+- name: Wait for dnsmasq to restart
+  pause:
+    seconds: 5

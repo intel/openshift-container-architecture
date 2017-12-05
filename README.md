@@ -1,46 +1,44 @@
-# Red Hat OpenShift®  Container Platform Reference Architecture for Lenovo® Rack Servers
+# Deploying Red Hat OpenShift® Container Platform 3.6 with Container-Native Storage
 
 ## Instructions
-*Please, refer to Reference Architecture document for actual instructions*
+Please, refer to [Reference Architecture document](https://builders.intel.com/docs/cloudbuilders/deploying-red-hat-openshift-container-platform-3-6-with-container-native-storage.pdf)
+ for actual instructions.
 
 ### Clone the repository
-```git clone https://github.com/intel/openshift-container-architecture.git```
-
-#### Optional: if switch provisioning is planned, submodule has to be initiated
-
-```git submodule init```
-
-```git submodule update```
+`git clone git@github.com:intel/openshift-container-architecture.git`
 
 ### Creating inventory
 Inventory file has to be filled manually.
-Refer to *hosts.example* for possible variables. 
+Refer to *hosts.example* for possible variables.
 
-```cp hosts.example /etc/ansible/hosts```
+`cp hosts.example /etc/ansible/hosts;
+vim /etc/ansible/hosts`
 
-```vim /etc/ansible/hosts```
+### Switch Configuration (optional)
+Update inventory group *[arista]* and run:
+
+`ansible-playbook src/eos-configuration/configure_eos.yaml`
+
+### Provisioning system setup
+
+`ansible-playbook ipxe-deployer/ipxe.yml`
+
+`env IPMI_PASSWORD=password /tftp/reboot.sh -b pxe -r -f /tftp/ipmi.list.txt`
 
 ### Preparing the nodes for OpenShift Container Platform
 
-```ansible-playbook src/prerequisites/nodes_setup.yaml -k```
+`ansible-playbook src/prerequisites/nodes_setup.yaml -k`
 
 ### Setting up multimaster HA
-switch user to *openshift*
-```su - openshift```
+switch user to *openshift*:
 
-```ansible-playbook src/keepalived-multimaster/keepalived.yaml```
+`su - openshift`
 
-### Deploying DRDB for NFS storage (Docker Images)
+run:
 
-```ansible-playbook src/drbd/drbd.yml```
+`ansible-playbook src/keepalived-multimaster/keepalived.yaml`
 
 ### Deploying OpenShift cluster
-```ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml```
+As user *openshift* run:
 
-### etcd scaling and other optional features
-Description can be find inside the _src_ directory
-
-## Authors:
-Łukasz Łuczaj (lukasz.luczaj@intel.com) - GitHub: lluczaj
-
-Łukasz Sztachański (lukasz.sztachanski@intel.com) - GitHub: lsztachanski
+`ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml`

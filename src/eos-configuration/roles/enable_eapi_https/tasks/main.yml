@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2017 Intel Corporation
+# Copyright (c) 2017 Intel Corporation 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-- name: Remove RedHat subscriptions
-  redhat_subscription:
-    state: absent
+- name: Check if eAPI is enabled
+  wait_for:
+    host: "{{ansible_host}}"
+    port: 443
+    timeout: 1
+    state: started
+  register: eapi_listening
+  ignore_errors: true
+
+- name: Enabling EAPI https access
+  eos_eapi:
+    http: False
+    https: True
+    state: started
+    provider:
+        transport: cli
+        authorize: yes
+  when: eapi_listening|failed
